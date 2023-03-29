@@ -137,6 +137,24 @@ def display_monthly_data(directory):
     [print(f"{v}{pad(v)}", end="") for v in rel_monthly_per]
     print("\n")
 
+def view_previous_data(parent_directory, operation):
+    print("\nEnter a relative directory from:")
+    [print(dir) for dir in os.listdir(parent_directory)]
+    directory_name = str(input("\n"))
+    target_directory = os.path.join(parent_directory, directory_name)
+
+    if operation == "pm":
+        return display_monthly_data(target_directory)
+
+    else:
+        print("\nEnter a file to view from:")
+        [print(file) for file in os.listdir(target_directory)]
+        file_name = str(input("\n"))
+        if ".txt" not in file_name:
+            file_name = f"{file_name}.txt"
+        target_file = os.path.join(target_directory, file_name)
+        return display_data(target_file)
+
 
 if __name__ == "__main__":
     operation = str(input(
@@ -150,23 +168,7 @@ if __name__ == "__main__":
     parent_directory = '/home/vallen/Documents/Health/Macronutritional_intake'
 
     if operation == "pf" or operation == "pm":
-        directory_name = str(input(
-                "Enter a relative directory path from: "
-                f"{os.listdir(parent_directory)}:\n"
-        ))
-        target_directory = os.path.join(parent_directory, directory_name)
-        if operation == "pm":
-            display_monthly_data(target_directory)
-
-        else:
-            file_name = str(input(
-                "Enter a file to view from: "
-                f"{os.listdir(target_directory)}:\n)"
-            ))
-            if ".txt" not in file_name:
-                file_name = f"{file_name}.txt"
-            target_file = os.path.join(target_directory, file_name)
-            display_data(target_file)
+        view_previous_data(parent_directory, operation)
 
     else:
         directory_name = f'{datetime.now().year}-{datetime.now().month}'
@@ -198,4 +200,3 @@ if __name__ == "__main__":
 
 # csv? never met her.
 # what's pathlib?
-# TODO: format file view @line: 165.
