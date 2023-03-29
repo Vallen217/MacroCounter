@@ -6,6 +6,8 @@ class main:
     def __init__(self, target_dir, target_f):
         self.target_dir = target_dir
         self.target_f = target_f
+        self.data = {"Cal": [], "Fat": [], "Carb": [], "Protein": []}
+        self.totals = [0, 0, 0, 0]
 
     def check_existence(self):
         if os.path.exists(self.target_dir):
@@ -20,11 +22,9 @@ class main:
         except FileExistsError:
             pass
 
-    def update_file(self):
-        data = {"Cal": [], "Fat": [], "Carb": [], "Protein": []}
-        print(f"DATA: {data}")
-        # saves the file data to rewrite it in compile_data with the new data
-        with open(self.target_f, 'r') as rf:
+    # saves the file data to rewrite it in write_file() with the new data
+    def compile_data(self, file_name):
+        with open(file_name, 'r') as rf:
             for line in rf:
                 if line == "\n":
                     break
@@ -35,35 +35,36 @@ class main:
                         datum = float(datum)
                         # caffeine fueled logic
                         if i % 4 == 0:
-                            data["Cal"].append(datum)
+                            self.data["Cal"].append(datum)
                         if (i - 1) % 4 == 0:
-                            data["Fat"].append(datum)
+                            self.data["Fat"].append(datum)
                         if i % 2 == 0 and i % 4 != 0:
-                            data["Carb"].append(datum)
+                            self.data["Carb"].append(datum)
                         if (i - 1) % 2 == 0 and (i - 1) % 4 != 0:
-                            data["Protein"].append(datum)
-        print(f"DATA TWO: {data}")
-        # new data entries
+                            self.data["Protein"].append(datum)
+        return
+
+    # append new data entries
+    def update_file(self):
         while True:
             try:
-                data["Cal"].append(float(input("Calorie: ")))
-                data["Fat"].append(float(input("Fat: ")))
-                data["Carb"].append(float(input("Carb: ")))
-                data["Protein"].append(float(input("Protein: ")))
+                self.data["Cal"].append(float(input("Calorie: ")))
+                self.data["Fat"].append(float(input("Fat: ")))
+                self.data["Carb"].append(float(input("Carb: ")))
+                self.data["Protein"].append(float(input("Protein: ")))
             except ValueError:
                 break
             if str(input().lower()) == "q":
                 break
+        return counter.write_file()
 
-        totals = [sum(data[key]) for key in data]
-        print(f"\n\nupdate_file:\nDATA: {data}\nTOTALS: {totals}\n")
-        return counter.compile_data(data, totals)
-
-    def compile_data(self, data, totals):
-
-        print(f"\n\ncompile_data:\nDATA: {data}\nTOTALS: {totals}\n")
-
+    def write_file(self):
+        self.totals = [sum(self.data[key]) for key in self.data]
         pad = lambda word: " " * (12 - len(str(word)))
+        ratio = 100 / (self.totals[1] + self.totals[2] + self.totals[3])
+        temp = [f"{round(ratio * self.totals[i], 1)}%" for i in range(1, 4)]
+        relative_per = [f"{v}{pad(v)}" for v in temp]
+
 
         with open(self.target_f, 'w') as wf:
             wf.write(
@@ -72,29 +73,24 @@ class main:
             )
 
         with open(self.target_f, 'a') as af:
-            for i in range(len(data["Cal"])):
+            for i in range(len(self.data["Cal"])):
                 af.write("\n")
-                for key in data:
+                for key in self.data:
                     if key == "Cal":
-                        af.write(f"{data[key][i]}{pad(data[key][i])}")
+                        af.write(f"{self.data[key][i]}{pad(self.data[key][i])}")
                     else:
-                        af.write(f"{data[key][i]}g{pad(f'{data[key][i]}g')}")
+                        af.write(f"{self.data[key][i]}g{pad(f'{self.data[key][i]}g')}")
 
             af.write(
                     f"\n\nTotal Amounts & Relative Percentages:\n"
-                    f"{totals[0]}{pad(totals[0])}"
-                    f"{totals[1]}g{pad(f'{totals[1]}g')}"
-                    f"{totals[2]}g{pad(f'{totals[2]}g')}"
-                    f"{totals[3]}g"
-            )
-
-            ratio = 100 / (totals[1] + totals[2] + totals[3])
-            temp = [f"{round(ratio * totals[i], 1)}%" for i in range(1, 4)]
-            relative_per = [f"{v}{pad(v)}" for v in temp]
-            af.write(f"\n{' ' * 12}{relative_per[0]}"
+                    f"{self.totals[0]}{pad(self.totals[0])}"
+                    f"{self.totals[1]}g{pad(f'{self.totals[1]}g')}"
+                    f"{self.totals[2]}g{pad(f'{self.totals[2]}g')}"
+                    f"{self.totals[3]}g"
+                    f"\n{' ' * 12}{relative_per[0]}"
                     f"{relative_per[1]}{relative_per[2]}"
-            )
-        display_data(target_file)
+                    )
+        return display_data(target_file)
 
 def display_data(file):
     print()
@@ -179,16 +175,21 @@ if __name__ == "__main__":
         target_file = os.path.join(target_directory, file_name)
 
         counter = main(target_directory, target_file)
+        counter.check_existence()
 
-        #if re.match("m[0-9]+", operation):
-        #   predefined_file = '/home/vallen/Workspace/MacroCounter'\
-        #                        f'/Predefined_Meals/{operation}.txt'
-        #    counter.check_existence()
-        #    counter.update_file(predefined_file)
-        if operation == "cf":
-            counter.check_existence() # to give a sense of control
+        if re.match("m[0-9]+", operation):
+            predefined_file = '/home/vallen/Workspace/MacroCounter'\
+                                f'/Predefined_Meals/{operation}.txt'
+            # 1st function call is to save pre-existing file data.
+            # 2nd function call is to append predefined data to the file.
+            counter.compile_data(target_file)
+            counter.compile_data(predefined_file)
+            counter.write_file()
+
+        if operation == "cf":  # this "ui option" is purely for aesthetics.
+            pass
         if operation == "uf":
-            counter.check_existence()
+            counter.compile_data(target_file)
             counter.update_file()
         if operation == "dm":
             display_monthly_data(target_directory)
@@ -197,6 +198,4 @@ if __name__ == "__main__":
 
 # csv? never met her.
 # what's pathlib?
-# TODO: rewrite this entire mess.
-# debug previous file data is not written along with new data entries @line: 34
-# format file view @line: 165.
+# TODO: format file view @line: 165.
