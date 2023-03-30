@@ -46,6 +46,7 @@ class main:
 
     # append new data entries
     def update_file(self):
+        print()
         while True:
             try:
                 self.data["Cal"].append(float(input("Calorie: ")))
@@ -158,12 +159,13 @@ def view_previous_data(parent_directory, operation):
 
 if __name__ == "__main__":
     operation = str(input(
-            "(cf) - Create new file: \n"
-            "(uf) - Update file: \n"
-            "(pf) - Display previous files:\n"
-            "(pm) - Display previous monthly data: \n"
-            "(df) - Display file: \n"
-            "(dm) - Display monthly data: \n\n"
+            "\n(cf) - Create new file:"
+            "\n(uf) - Update file:"
+            "\n(pf) - Display previous files:"
+            "\n(pm) - Display previous monthly data:"
+            "\n(df) - Display file:"
+            "\n(dm) - Display monthly data:\n"
+            "-"
     )).lower()
     parent_directory = '/home/vallen/Documents/Health/Macronutritional_intake'
 
