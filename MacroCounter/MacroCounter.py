@@ -2,7 +2,7 @@ import os
 import re
 from datetime import datetime
 
-class main:
+class MacroCounter:
     def __init__(self, target_dir, target_f):
         self.target_dir = target_dir
         self.target_f = target_f
@@ -46,7 +46,10 @@ class main:
 
     # append new data entries
     def update_file(self):
-        print()
+        print(
+                "\n(q) - Quit loop\n"
+                "(Quit only after entering data into all 4 entries)\n"
+        )
         while True:
             try:
                 self.data["Cal"].append(float(input("Calorie: ")))
@@ -57,7 +60,7 @@ class main:
                 break
             if str(input().lower()) == "q":
                 break
-        return counter.write_file()
+        return self.write_file()
 
     def write_file(self):
         self.totals = [sum(self.data[key]) for key in self.data]
@@ -91,7 +94,7 @@ class main:
                     f"\n{' ' * 12}{relative_per[0]}"
                     f"{relative_per[1]}{relative_per[2]}"
                     )
-        return display_data(target_file)
+        return display_data(self.target_f)
 
 def display_data(file):
     print()
@@ -156,30 +159,34 @@ def view_previous_data(parent_directory, operation):
         target_file = os.path.join(target_directory, file_name)
         return display_data(target_file)
 
-
-if __name__ == "__main__":
-    operation = str(input(
-            "\n(cf) - Create new file:"
-            "\n(uf) - Update file:"
-            "\n(pf) - Display previous files:"
-            "\n(pm) - Display previous monthly data:"
-            "\n(df) - Display file:"
-            "\n(dm) - Display monthly data:\n"
-            "-"
-    )).lower()
+def main():
     parent_directory = '/home/vallen/Documents/Health/Macronutritional_intake'
+    directory_name = f'{datetime.now().year}-{datetime.now().month}'
+    target_directory = os.path.join(parent_directory, directory_name)
+    file_name = f'{datetime.now().day}.txt'
+    target_file = os.path.join(target_directory, file_name)
 
-    if operation == "pf" or operation == "pm":
-        view_previous_data(parent_directory, operation)
+    counter = MacroCounter(target_directory, target_file)
+    counter.check_existence()
 
-    else:
-        directory_name = f'{datetime.now().year}-{datetime.now().month}'
-        target_directory = os.path.join(parent_directory, directory_name)
-        file_name = f'{datetime.now().day}.txt'
-        target_file = os.path.join(target_directory, file_name)
+    print(
+        "\n(cf) - Create new file"
+        "\n(uf) - Update file"
+        "\n(pf) - Display previous files"
+        "\n(pm) - Display previous monthly data"
+        "\n(df) - Display file"
+        "\n(dm) - Display monthly data"
+        "\n(q) - Quit the program"
+    )
 
-        counter = main(target_directory, target_file)
-        counter.check_existence()
+    # calling functions inside a while loop feels wrong... but it works well.
+    while True:
+        operation = str(input("-")).lower()
+        if operation == "q":
+            break
+
+        if operation == "pf" or operation == "pm":
+            view_previous_data(parent_directory, operation)
 
         if re.match("m[0-9]+", operation):
             predefined_file = '/home/vallen/Workspace/MacroCounter'\
@@ -199,6 +206,9 @@ if __name__ == "__main__":
             display_monthly_data(target_directory)
         if operation == "df":
             display_data(target_file)
+    return
 
+if __name__ == "__main__":
+    main()  
 # csv? never met her.
 # what's pathlib?
