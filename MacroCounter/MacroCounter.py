@@ -6,7 +6,7 @@ class MacroCounter:
     def __init__(self, target_dir, target_f):
         self.target_dir = target_dir
         self.target_f = target_f
-        self.data = {"Cal": [], "Fat": [], "Carb": [], "Protein": []}
+        self.data = [], [], [], []
         self.totals = [0, 0, 0, 0]
 
     def check_existence(self):
@@ -22,8 +22,13 @@ class MacroCounter:
         except FileExistsError:
             pass
 
-    # saves the file data to rewrite it in write_file() with the new data
-    def compile_data(self, file_name):
+    # saves the file data to rewrite it in write_file() with the new data.
+    def compile_data(self, file_name, clean_data=False):
+        # self.data must be cleared to properly recompile data-
+        # if a line is to be removed in modify_file().
+        if clean_data:
+            [self.data[i].clear() for i in range(len(self.data))]
+
         with open(file_name, 'r') as rf:
             for line in rf:
                 if line == "\n":
@@ -33,37 +38,48 @@ class MacroCounter:
                         if "g" in datum[-1]:
                             datum = datum[0:-1]
                         datum = float(datum)
-                        # caffeine fueled logic
+                        # caffeine fueled logic.
                         if i % 4 == 0:
-                            self.data["Cal"].append(datum)
+                            self.data[0].append(datum)
                         if (i - 1) % 4 == 0:
-                            self.data["Fat"].append(datum)
+                            self.data[1].append(datum)
                         if i % 2 == 0 and i % 4 != 0:
-                            self.data["Carb"].append(datum)
+                            self.data[2].append(datum)
                         if (i - 1) % 2 == 0 and (i - 1) % 4 != 0:
-                            self.data["Protein"].append(datum)
+                            self.data[3].append(datum)
         return
 
-    # append new data entries
-    def update_file(self):
+    # modify file data entries.
+    def modify_file(self):
         print(
-                "\n(q) - Quit loop\n"
+                "\n(rl)  - Removes last file entry"
+                "\n(rlq) - Removes last file entry & quit"
+                "\n(q)   - Quit loop\n"
                 "(Quit only after entering data into all 4 entries)\n"
         )
         while True:
             try:
-                self.data["Cal"].append(float(input("Calorie: ")))
-                self.data["Fat"].append(float(input("Fat: ")))
-                self.data["Carb"].append(float(input("Carb: ")))
-                self.data["Protein"].append(float(input("Protein: ")))
+                self.data[0].append(float(input("Calorie: ")))
+                self.data[1].append(float(input("Fat: ")))
+                self.data[2].append(float(input("Carb: ")))
+                self.data[3].append(float(input("Protein: ")))
             except ValueError:
                 break
-            if str(input().lower()) == "q":
+
+            operation = str(input()).lower()
+            if operation == "q":
                 break
+            if "rl" in operation:
+                self.data[0].remove(self.data[0][-1])
+                self.data[1].remove(self.data[1][-1])
+                self.data[2].remove(self.data[2][-1])
+                self.data[3].remove(self.data[3][-1])
+                if operation == "rlq":  # vim like keystokes.
+                    break
         return self.write_file()
 
     def write_file(self):
-        self.totals = [sum(self.data[key]) for key in self.data]
+        self.totals = [sum(self.data[i]) for i in range(len(self.data))]
         pad = lambda word: " " * (12 - len(str(word)))
         ratio = 100 / (self.totals[1] + self.totals[2] + self.totals[3])
         temp = [f"{round(ratio * self.totals[i], 1)}%" for i in range(1, 4)]
@@ -77,13 +93,15 @@ class MacroCounter:
             )
 
         with open(self.target_f, 'a') as af:
-            for i in range(len(self.data["Cal"])):
+            for i in range(len(self.data[0])):
                 af.write("\n")
-                for key in self.data:
-                    if key == "Cal":
-                        af.write(f"{self.data[key][i]}{pad(self.data[key][i])}")
+                for j in range(len(self.data)):
+                    if j == 0:
+                        af.write(f"{self.data[j][i]}"
+                                f"{pad(self.data[j][i])}")
                     else:
-                        af.write(f"{self.data[key][i]}g{pad(f'{self.data[key][i]}g')}")
+                        af.write(f"{self.data[j][i]}g"
+                        f"{pad(f'{self.data[j][i]}g')}")
 
             af.write(
                     f"\n\nTotal Amounts & Relative Percentages:\n"
@@ -170,13 +188,13 @@ def main():
     counter.check_existence()
 
     print(
-        "\n(cf) - Create new file"
-        "\n(uf) - Update file"
-        "\n(pf) - Display previous files"
-        "\n(pm) - Display previous monthly data"
-        "\n(df) - Display file"
-        "\n(dm) - Display monthly data"
-        "\n(q) - Quit the program"
+        "\n(cf)  - Create new file"
+        "\n(mf)  - Modify file"
+        "\n(dpf) - Display previous files"
+        "\n(dpm) - Display previous monthly data"
+        "\n(df)  - Display file"
+        "\n(dm)  - Display monthly data"
+        "\n(q)   - Quit the program"
     )
 
     # calling functions inside a while loop feels wrong... but it works well.
@@ -199,9 +217,9 @@ def main():
 
         if operation == "cf":  # this "ui option" is purely for aesthetics.
             pass
-        if operation == "uf":
-            counter.compile_data(target_file)
-            counter.update_file()
+        if operation == "mf":
+            counter.compile_data(target_file, clean_data=True)
+            counter.modify_file()
         if operation == "dm":
             display_monthly_data(target_directory)
         if operation == "df":
@@ -209,6 +227,6 @@ def main():
     return
 
 if __name__ == "__main__":
-    main()  
+    main()
 # csv? never met her.
 # what's pathlib?
