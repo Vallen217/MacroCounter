@@ -24,8 +24,7 @@ class MacroCounter:
 
     # saves the file data to rewrite it in write_file() with the new data.
     def compile_data(self, file_name, clean_data=False):
-        # self.data must be cleared to properly recompile data-
-        # if a line is to be removed in modify_file().
+        # self.data must be cleared to properly recompile data in certain cases
         if clean_data:
             [self.data[i].clear() for i in range(len(self.data))]
 
@@ -66,7 +65,7 @@ class MacroCounter:
             except ValueError:
                 break
 
-            operation = str(input()).lower()
+            operation = str(input("-")).lower()
             if operation == "q":
                 break
             if "rl" in operation:
@@ -211,7 +210,7 @@ def main():
                                 f'/Predefined_Meals/{operation}.txt'
             # 1st function call is to save pre-existing file data.
             # 2nd function call is to append predefined data to the file.
-            counter.compile_data(target_file)
+            counter.compile_data(target_file, clean_data=True)
             counter.compile_data(predefined_file)
             counter.write_file()
 
