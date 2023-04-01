@@ -52,7 +52,7 @@ class MacroCounter:
     def modify_file(self):
         print(
                 "\n(rl)  - Removes last file entry"
-                "\n(rlq) - Removes last file entry & quit"
+                "\n(rlq) - Removes last file entry & quit loop"
                 "\n(q)   - Quit loop\n"
                 "(Quit only after entering data into all 4 entries)\n"
         )
@@ -69,10 +69,8 @@ class MacroCounter:
             if operation == "q":
                 break
             if "rl" in operation:
-                self.data[0].remove(self.data[0][-1])
-                self.data[1].remove(self.data[1][-1])
-                self.data[2].remove(self.data[2][-1])
-                self.data[3].remove(self.data[3][-1])
+                [self.data[i].remove(self.data[i][-1])\
+                        for i in range(len(self.data))]
                 if operation == "rlq":  # vim like keystokes.
                     break
         return self.write_file()
@@ -164,7 +162,7 @@ def view_previous_data(parent_directory, operation):
     directory_name = str(input("\n"))
     target_directory = os.path.join(parent_directory, directory_name)
 
-    if operation == "pm":
+    if operation == "dpm":
         return display_monthly_data(target_directory)
 
     else:
@@ -202,7 +200,7 @@ def main():
         if operation == "q":
             break
 
-        if operation == "pf" or operation == "pm":
+        if operation == "dpf" or operation == "dpm":
             view_previous_data(parent_directory, operation)
 
         if re.match("m[0-9]+", operation):
@@ -219,10 +217,10 @@ def main():
         if operation == "mf":
             counter.compile_data(target_file, clean_data=True)
             counter.modify_file()
-        if operation == "dm":
-            display_monthly_data(target_directory)
         if operation == "df":
             display_data(target_file)
+        if operation == "dm":
+            display_monthly_data(target_directory)
     return
 
 if __name__ == "__main__":
