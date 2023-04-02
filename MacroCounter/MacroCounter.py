@@ -48,7 +48,6 @@ class MacroCounter:
                             self.data[3].append(datum)
         return
 
-    # modify file data entries.
     def modify_file(self):
         print(
                 "\n(rl)  - Removes last file entry"
@@ -69,10 +68,14 @@ class MacroCounter:
             if operation == "q":
                 break
             if "rl" in operation:
-                [self.data[i].remove(self.data[i][-1])\
-                        for i in range(len(self.data))]
+                [self.data[i].pop() for i in range(4)]
                 if operation == "rlq":  # vim like keystokes.
                     break
+
+        # catch potential index errors.
+        for i in range(4):
+            if len(self.data[i]) != len(self.data[3]):
+                self.data[i].pop()
         return self.write_file()
 
     def write_file(self):
@@ -92,7 +95,7 @@ class MacroCounter:
         with open(self.target_f, 'a') as af:
             for i in range(len(self.data[0])):
                 af.write("\n")
-                for j in range(len(self.data)):
+                for j in range(4):
                     if j == 0:
                         af.write(f"{self.data[j][i]}"
                                 f"{pad(self.data[j][i])}")
