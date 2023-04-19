@@ -50,12 +50,13 @@ class MacroCounter:
 
     def modify_file(self):
         print(
-                "\n(rl)  - Removes last file entry"
-                "\n(rlq) - Removes last file entry & quit loop"
-                "\n(q)   - Quit loop\n"
-                "(Quit only after entering data into all 4 entries)\n"
+                "\n(rln)  - Removes the last n file entry lines (default: 1)"
+                "\n(rlqn) - Removes the last n file entry lines and quit "
+                "\n(q)    - Quit loop\n"
+                "\nPress any key to continue\n"
         )
         while True:
+            operation = str(input("-")).lower()
             try:
                 self.data[0].append(float(input("Calorie: ")))
                 self.data[1].append(float(input("Fat: ")))
@@ -64,12 +65,17 @@ class MacroCounter:
             except ValueError:
                 break
 
-            operation = str(input("-")).lower()
             if operation == "q":
                 break
-            if "rl" in operation:
-                [self.data[i].pop() for i in range(4)]
-                if operation == "rlq":  # vim like keystokes.
+            # I tried to keep it dry, but regex happend.
+            if re.match("rlq?[0-9]*", operation):
+                if "q" in operation:
+                    iterations = int(operation[3:]) if int(operation[3:]) >= 1 else 1
+                else:
+                    iterations = int(operation[2:]) if int(operation[2:]) >= 1 else 1
+                for i in range(iterations):
+                    [self.data[j].pop() for j in range(4)]
+                if "q" in operation:
                     break
 
         # catch potential index errors.
@@ -84,7 +90,6 @@ class MacroCounter:
         ratio = 100 / (self.totals[1] + self.totals[2] + self.totals[3])
         temp = [f"{round(ratio * self.totals[i], 1)}%" for i in range(1, 4)]
         relative_per = [f"{v}{pad(v)}" for v in temp]
-
 
         with open(self.target_f, 'w') as wf:
             wf.write(
@@ -130,9 +135,8 @@ def display_monthly_data(directory):
     for file in file_list:
         with open(f"{directory}/{file}") as rf:
             lines = rf.readlines()
-
-        temp = [lines[i+2].split() for i, line in\
-                enumerate(lines) if line == "\n"]
+        temp = [lines[i+2].split() for\
+                i, line in enumerate(lines) if line == "\n"]
         for j in range(4):
             if "g" in temp[0][j]:
                 temp[0][j] = temp[0][j][0:-1]
@@ -178,6 +182,7 @@ def view_previous_data(parent_directory, operation):
         return display_data(target_file)
 
 def main():
+    # what's pathlib?
     parent_directory = '/home/vallen/Documents/Health/Macronutritional_intake'
     directory_name = f'{datetime.now().year}-{datetime.now().month}'
     target_directory = os.path.join(parent_directory, directory_name)
@@ -228,5 +233,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-# csv? never met her.
-# what's pathlib?
