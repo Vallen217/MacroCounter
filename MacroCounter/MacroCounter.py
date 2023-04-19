@@ -53,7 +53,7 @@ class MacroCounter:
                 "\n(rln)  - Removes the last n file entry lines (default: 1)"
                 "\n(rlqn) - Removes the last n file entry lines and quit "
                 "\n(q)    - Quit loop\n"
-                "\nPress any key to continue\n"
+                "\nPress any key to continue"
         )
         while True:
             operation = str(input("-")).lower()
