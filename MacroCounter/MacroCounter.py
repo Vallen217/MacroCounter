@@ -50,13 +50,25 @@ class MacroCounter:
 
     def modify_file(self):
         print(
-                "\n(rln)  - Removes the last n file entry lines (default: 1)"
+                "\n(rln)  - Removes the last n file entry lines"
                 "\n(rlqn) - Removes the last n file entry lines and quit "
                 "\n(q)    - Quit loop\n"
                 "\nPress any key to continue"
         )
         while True:
             operation = str(input("-")).lower()
+            if operation == "q":
+                break
+
+            # I tried to keep it dry, but regex happend.
+            if re.match("rlq?[0-9]*", operation):
+                iterations = int(operation[3:]) if "q" in operation\
+                        else int(operation[2:])
+                for i in range(iterations):
+                    [self.data[j].pop() for j in range(4)]
+                if "q" in operation:
+                    break
+
             try:
                 self.data[0].append(float(input("Calorie: ")))
                 self.data[1].append(float(input("Fat: ")))
@@ -64,20 +76,7 @@ class MacroCounter:
                 self.data[3].append(float(input("Protein: ")))
             except ValueError:
                 break
-
-            if operation == "q":
-                break
-            # I tried to keep it dry, but regex happend.
-            if re.match("rlq?[0-9]*", operation):
-                if "q" in operation:
-                    iterations = int(operation[3:]) if int(operation[3:]) >= 1 else 1
-                else:
-                    iterations = int(operation[2:]) if int(operation[2:]) >= 1 else 1
-                for i in range(iterations):
-                    [self.data[j].pop() for j in range(4)]
-                if "q" in operation:
-                    break
-
+            
         # catch potential index errors.
         for i in range(4):
             if len(self.data[i]) != len(self.data[3]):
