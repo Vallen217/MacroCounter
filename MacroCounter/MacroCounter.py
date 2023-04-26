@@ -201,7 +201,6 @@ def main():
         "\n(q)   - Quit the program"
     )
 
-    # calling functions inside a while loop feels wrong... but it works well.
     while True:
         operation = str(input("-")).lower()
         if operation == "q":
@@ -212,7 +211,7 @@ def main():
 
         if re.match("m[0-9]+", operation):
             predefined_file = '/home/vallen/Workspace/MacroCounter'\
-                                f'/Predefined_Meals/{operation}.txt'
+                    f'/MacroCounter/Predefined_Meals/{operation}.txt'
             # 1st function call is to save pre-existing file data.
             # 2nd function call is to append predefined data to the file.
             counter.compile_data(target_file, clean_data=True)
