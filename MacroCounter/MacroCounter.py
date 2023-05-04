@@ -19,6 +19,7 @@ class MacroCounter:
         try:
             with open(self.target_f, 'x') as _:
                 pass
+
         except FileExistsError:
             pass
 
@@ -60,7 +61,6 @@ class MacroCounter:
             if operation == "q":
                 break
 
-            # I tried to keep it dry, but regex happend.
             if re.match("rlq?[0-9]*", operation):
                 iterations = int(operation[3:]) if "q" in operation\
                         else int(operation[2:])
@@ -74,6 +74,7 @@ class MacroCounter:
                 self.data[1].append(float(input("Fat: ")))
                 self.data[2].append(float(input("Carb: ")))
                 self.data[3].append(float(input("Protein: ")))
+
             except ValueError:
                 break
             
@@ -165,7 +166,16 @@ def display_monthly_data(directory):
 def view_previous_data(parent_directory, operation):
     print("\nEnter a relative directory from:")
     [print(dir) for dir in os.listdir(parent_directory)]
-    directory_name = str(input("\n"))
+
+    try:
+        directory_name = str(input("\n"))
+        if directory_name not in os.listdir(parent_directory):
+            raise FileNotFoundError
+
+    except FileNotFoundError:
+        print(f"Error: '{directory_name}' is not a valid directory.")
+        return
+
     target_directory = os.path.join(parent_directory, directory_name)
 
     if operation == "dpm":
@@ -174,9 +184,19 @@ def view_previous_data(parent_directory, operation):
     else:
         print("\nEnter a file to view from:")
         [print(file) for file in os.listdir(target_directory)]
-        file_name = str(input("\n"))
-        if ".txt" not in file_name:
-            file_name = f"{file_name}.txt"
+
+        try:
+            file_name = str(input("\n"))
+            if ".txt" not in file_name:
+                file_name = f"{file_name}.txt"
+
+            if file_name not in os.listdir(target_directory):
+                raise FileNotFoundError
+
+        except FileNotFoundError:
+            print(f"Error: '{file_name}' is not a valid file.")
+            return
+
         target_file = os.path.join(target_directory, file_name)
         return display_data(target_file)
 
