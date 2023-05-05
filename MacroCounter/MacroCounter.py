@@ -3,25 +3,30 @@ import re
 from datetime import datetime
 
 class MacroCounter:
-    def __init__(self, target_dir, target_f):
-        self.target_dir = target_dir
-        self.target_f = target_f
+    def __init__(self, target_directory, target_file):
+        self.target_directory = target_directory
+        self.target_file = target_file
         self.data = [], [], [], []
         self.totals = [0, 0, 0, 0]
 
-    def check_existence(self):
-        if os.path.exists(self.target_dir):
+    def check_existence(self, predefined=False):
+        if os.path.exists(self.target_directory):
             pass
         else:
-            os.mkdir(self.target_dir)
-        os.chdir(self.target_dir)
+            os.mkdir(self.target_directory)
+        os.chdir(self.target_directory)
 
         try:
-            with open(self.target_f, 'x') as _:
+            with open(self.target_file, 'x') as _:
                 pass
 
         except FileExistsError:
             pass
+
+        if predefined == True:
+            return predefined_meals()
+        else:
+            return
 
     # saves the file data to rewrite it in write_file() with the new data.
     def compile_data(self, file_name, clean_data=False):
@@ -33,11 +38,13 @@ class MacroCounter:
             for line in rf:
                 if line == "\n":
                     break
+                
                 if re.match("\d+\.\dg?", line):
                     for i, datum in enumerate(line.split()):
                         if "g" in datum[-1]:
                             datum = datum[0:-1]
                         datum = float(datum)
+
                         # caffeine fueled logic.
                         if i % 4 == 0:
                             self.data[0].append(datum)
@@ -53,7 +60,7 @@ class MacroCounter:
         print(
                 "\n(rln)  - Removes the last n file entry lines"
                 "\n(rlqn) - Removes the last n file entry lines and quit "
-                "\n(q)    - Quit loop\n"
+                "\n(q)    - Quit the loop\n"
                 "\nPress any key to continue"
         )
         while True:
@@ -91,13 +98,13 @@ class MacroCounter:
         temp = [f"{round(ratio * self.totals[i], 1)}%" for i in range(1, 4)]
         relative_per = [f"{v}{pad(v)}" for v in temp]
 
-        with open(self.target_f, 'w') as wf:
+        with open(self.target_file, 'w') as wf:
             wf.write(
                     f"Cal:{pad('Cal:')}Fat:{pad('Fat:')}"
                     f"Carb:{pad('Carb:')}Protein:{pad('Protein:')}"
             )
 
-        with open(self.target_f, 'a') as af:
+        with open(self.target_file, 'a') as af:
             for i in range(len(self.data[0])):
                 af.write("\n")
                 for j in range(4):
@@ -117,7 +124,53 @@ class MacroCounter:
                     f"\n{' ' * 12}{relative_per[0]}"
                     f"{relative_per[1]}{relative_per[2]}"
                     )
-        return display_data(self.target_f)
+        return display_data(self.target_file)
+
+# This is appalling, but it works.
+def predefined_meals():
+    target_directory= '/home/vallen/Workspace/MacroCounter/MacroCounter/Predefined_Meals'
+    print(
+        "\n(cp)  - Create new predefined meal"
+        "\n(mp)  - Modify predefined meal"
+        "\n(dp)  - Display predefined meals"
+        "\n(q)   - Quit the loop"
+        "\n"
+    )
+
+    operation = str(input("-")).lower()
+    if operation == "q":
+        return main()
+
+    if operation == "cp":
+        file_name = f"m{len(os.listdir(target_directory)) + 1}.txt"
+        target_file = os.path.join(target_directory, file_name)
+        counter = MacroCounter(target_directory, target_file=target_file)
+        counter.check_existence(predefined=True)
+
+    if operation == "mp":
+        print("Enter a file to modify from:")
+        [print(file) for file in os.listdir(target_directory)]
+
+        try:
+            file_name = str(input())
+            if ".txt" not in file_name:
+                file_name = f"{file_name}.txt"
+
+            if file_name not in os.listdir(target_directory):
+                raise FileNotFoundError
+
+        except FileNotFoundError:
+            print(f"Error: '{file_name}' is not a valid file")
+            return predefined_meals() 
+
+        target_file = os.path.join(target_directory, file_name)
+        counter = MacroCounter(target_directory, target_file)
+        counter.compile_data(target_file, clean_data=True)
+        counter.modify_file()
+    
+    if operation == "dp":
+        view_previous_data(target_directory, operation, predefined=True)
+        return predefined_meals()
 
 def display_data(file):
     print()
@@ -163,20 +216,24 @@ def display_monthly_data(directory):
     [print(f"{v}{pad(v)}", end="") for v in rel_monthly_per]
     print("\n")
 
-def view_previous_data(parent_directory, operation):
-    print("\nEnter a relative directory from:")
-    [print(dir) for dir in os.listdir(parent_directory)]
+def view_previous_data(parent_directory, operation, predefined=False):
+    if not predefined:
+        print("\nEnter a relative directory from:")
+        [print(dir) for dir in os.listdir(parent_directory)]
 
-    try:
-        directory_name = str(input("\n"))
-        if directory_name not in os.listdir(parent_directory):
-            raise FileNotFoundError
+        try:
+            directory_name = str(input("\n"))
+            if directory_name not in os.listdir(parent_directory):
+                raise FileNotFoundError
 
-    except FileNotFoundError:
-        print(f"Error: '{directory_name}' is not a valid directory.")
-        return
+        except FileNotFoundError:
+            print(f"Error: '{directory_name}' is not a valid directory.")
+            return
 
-    target_directory = os.path.join(parent_directory, directory_name)
+        target_directory = os.path.join(parent_directory, directory_name)
+
+    else:
+        target_directory= parent_directory
 
     if operation == "dpm":
         return display_monthly_data(target_directory)
@@ -201,7 +258,16 @@ def view_previous_data(parent_directory, operation):
         return display_data(target_file)
 
 def main():
-    # what's pathlib?
+    print(
+        "\n(mf)  - Modify file"
+        "\n(dpf) - Display previous files"
+        "\n(dpm) - Display previous monthly data"
+        "\n(df)  - Display file"
+        "\n(dm)  - Display monthly data"
+        "\n(pd)  - Predefined meals"
+        "\n(q)   - Quit the program"
+        )
+
     parent_directory = '/home/vallen/Documents/Health/Macronutritional_intake'
     directory_name = f'{datetime.now().year}-{datetime.now().month}'
     target_directory = os.path.join(parent_directory, directory_name)
@@ -210,21 +276,14 @@ def main():
 
     counter = MacroCounter(target_directory, target_file)
     counter.check_existence()
-
-    print(
-        "\n(cf)  - Create new file"
-        "\n(mf)  - Modify file"
-        "\n(dpf) - Display previous files"
-        "\n(dpm) - Display previous monthly data"
-        "\n(df)  - Display file"
-        "\n(dm)  - Display monthly data"
-        "\n(q)   - Quit the program"
-    )
-
+    
     while True:
         operation = str(input("-")).lower()
         if operation == "q":
             break
+
+        if operation == "pd":
+            return predefined_meals()
 
         if operation == "dpf" or operation == "dpm":
             view_previous_data(parent_directory, operation)
@@ -238,8 +297,6 @@ def main():
             counter.compile_data(predefined_file)
             counter.write_file()
 
-        if operation == "cf":  # this "ui option" is purely for aesthetics.
-            pass
         if operation == "mf":
             counter.compile_data(target_file, clean_data=True)
             counter.modify_file()
