@@ -130,9 +130,9 @@ class MacroCounter:
 def predefined_meals():
     target_directory= '/home/vallen/Workspace/MacroCounter/MacroCounter/Predefined_Meals'
     print(
-        "\n(cp)  - Create new predefined meal"
-        "\n(mp)  - Modify predefined meal"
-        "\n(dp)  - Display predefined meals"
+        "\n(cf)  - Create new predefined meal"
+        "\n(mf)  - Modify predefined meal"
+        "\n(df)  - Display predefined meals"
         "\n(q)   - Quit the loop"
         "\n"
     )
@@ -141,13 +141,13 @@ def predefined_meals():
     if operation == "q":
         return main()
 
-    if operation == "cp":
+    if operation == "cf":
         file_name = f"m{len(os.listdir(target_directory)) + 1}.txt"
         target_file = os.path.join(target_directory, file_name)
         counter = MacroCounter(target_directory, target_file=target_file)
         counter.check_existence(predefined=True)
 
-    if operation == "mp":
+    if operation == "mf":
         print("Enter a file to modify from:")
         [print(file) for file in os.listdir(target_directory)]
 
@@ -167,8 +167,9 @@ def predefined_meals():
         counter = MacroCounter(target_directory, target_file)
         counter.compile_data(target_file, clean_data=True)
         counter.modify_file()
+        return predefined_meals()
     
-    if operation == "dp":
+    if operation == "df":
         view_previous_data(target_directory, operation, predefined=True)
         return predefined_meals()
 
