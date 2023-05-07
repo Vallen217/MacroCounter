@@ -126,7 +126,7 @@ class MacroCounter:
                     )
         return display_data(self.target_file)
 
-# This is appalling, but it works.
+# This is an appalling mess, but it works.
 def predefined_meals():
     target_directory= '/home/vallen/Workspace/MacroCounter/MacroCounter/Predefined_Meals'
     print(
@@ -134,44 +134,41 @@ def predefined_meals():
         "\n(mf)  - Modify predefined meal"
         "\n(df)  - Display predefined meals"
         "\n(q)   - Quit the loop"
-        "\n"
     )
+    while True:
+        operation = str(input("-")).lower()
+        if operation == "q":
+            return main()
 
-    operation = str(input("-")).lower()
-    if operation == "q":
-        return main()
+        if operation == "cf":
+            file_name = f"m{len(os.listdir(target_directory)) + 1}.txt"
+            target_file = os.path.join(target_directory, file_name)
+            counter = MacroCounter(target_directory, target_file=target_file)
+            counter.check_existence(predefined=True)
 
-    if operation == "cf":
-        file_name = f"m{len(os.listdir(target_directory)) + 1}.txt"
-        target_file = os.path.join(target_directory, file_name)
-        counter = MacroCounter(target_directory, target_file=target_file)
-        counter.check_existence(predefined=True)
+        if operation == "mf":
+            print("Enter a file to modify from:")
+            [print(file) for file in os.listdir(target_directory)]
 
-    if operation == "mf":
-        print("Enter a file to modify from:")
-        [print(file) for file in os.listdir(target_directory)]
+            try:
+                file_name = str(input())
+                if ".txt" not in file_name:
+                    file_name = f"{file_name}.txt"
 
-        try:
-            file_name = str(input())
-            if ".txt" not in file_name:
-                file_name = f"{file_name}.txt"
+                if file_name not in os.listdir(target_directory):
+                    raise FileNotFoundError
 
-            if file_name not in os.listdir(target_directory):
-                raise FileNotFoundError
+            except FileNotFoundError:
+                print(f"Error: '{file_name}' is not a valid file")
+                return predefined_meals() 
 
-        except FileNotFoundError:
-            print(f"Error: '{file_name}' is not a valid file")
-            return predefined_meals() 
-
-        target_file = os.path.join(target_directory, file_name)
-        counter = MacroCounter(target_directory, target_file)
-        counter.compile_data(target_file, clean_data=True)
-        counter.modify_file()
-        return predefined_meals()
-    
-    if operation == "df":
-        view_previous_data(target_directory, operation, predefined=True)
-        return predefined_meals()
+            target_file = os.path.join(target_directory, file_name)
+            counter = MacroCounter(target_directory, target_file)
+            counter.compile_data(target_file, clean_data=True)
+            counter.modify_file()
+        
+        if operation == "df":
+            view_previous_data(target_directory, operation, predefined=True)
 
 def display_data(file):
     print()
