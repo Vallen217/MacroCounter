@@ -263,7 +263,7 @@ def main():
         "\n(df)  - Display file"
         "\n(dm)  - Display monthly data"
         "\n(pd)  - Predefined meals"
-        "\n(m#)  - Append predefined meal "m#"
+        "\n(m#)  - Append predefined meal m#"
         "\n(q)   - Quit the program"
         )
 
