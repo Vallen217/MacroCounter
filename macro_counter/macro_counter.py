@@ -1,20 +1,58 @@
+"""Track and record macronutritional information and calories.
+
+macro_counter primarily writes user inputed data onto .txt files
+systematically separated by days, and placed in directories separated by months and years,
+which are located in "/home/$USER/Documents/Health/Macronutritional_intake".
+"""
 import os
 import re
 from datetime import datetime
 
 
 def pad(word):
+    """Generate uniform spacing for .txt files.
+
+    Args:
+        word (String): A string.
+
+    Returns:
+        A number of whitespaces = 12 - len(word).
+    """
     return " " * (12 - len(str(word)))
 
 
 class MacroCounter:
+    """Refer to line: 1 - 6.
+
+    Attributes:
+        target_directory: The directory containing the `target_files`.
+        target_file: Targeted file you wish to access within the `target_directory`.
+        data: Multidimentional array of macronutrional information \
+                i.e. [[calories], [fat], [carbohydrates], [protein]].
+        totals: Array of the sums of each array from `data`.
+    """
+
     def __init__(self, target_directory, target_file):
+        """Object constructor.
+
+        Args:
+            target_directory (string: absolute directory path): targeted directory.
+            target_file (string: absolute file path): targeted file.
+        """
         self.target_directory = target_directory
         self.target_file = target_file
         self.data = [], [], [], []
         self.totals = [0, 0, 0, 0]
 
     def check_existence(self, predefined=False):
+        """Create the file and/or directories if they don't already exist.
+
+        Args:
+            predefined (boolean): Returns `predefined` if True.
+
+        Returns:
+            None.
+        """
         if os.path.exists(self.target_directory):
             pass
         else:
@@ -31,11 +69,17 @@ class MacroCounter:
 
     # saves the file data to rewrite it in write_file() with the new data.
     def compile_data(self, file_name, clean_data=False):
+        """Read lines of data from `file_name` and appends it to `self.data`.
+
+        Args:
+            file_name (string: absolute file path): Targeted file.
+            clean_data (boolean): cleans each array in `self.data` if true.
+
+        """
         # self.data must be cleared to properly recompile data in some cases
         if clean_data:
             for i in range(len(self.data)):
                 self.data[i].clear()
-            # [self.data[i].clear() for i in range(len(self.data))]
 
         with open(file_name, "r", encoding="utf-8") as read_file:
             for line in read_file:
@@ -58,7 +102,12 @@ class MacroCounter:
                         if (i - 1) % 2 == 0 and (i - 1) % 4 != 0:
                             self.data[3].append(datum)
 
-    def modify_file(self):
+    def collect_data(self):
+        """Collect macronutrional data from user input and append it to `self.data`.
+
+        Returns:
+            `self.write_data()`
+        """
         print(
             "\n(rl#)  - Removes the last n file entry lines"
             "\n(rlq#) - Removes the last n file entry lines and quit "
@@ -97,6 +146,11 @@ class MacroCounter:
         return self.write_file()
 
     def write_file(self):
+        """Write information stored in `self.data` to `self.target_file`.
+
+        Returns:
+            `display_data(self.target_file)`
+        """
         self.totals = [sum(self.data[i]) for i in range(len(self.data))]
         ratio = 100 / (self.totals[1] + self.totals[2] + self.totals[3])
         temp = [f"{round(ratio * self.totals[i], 1)}%" for i in range(1, 4)]
@@ -135,6 +189,12 @@ class MacroCounter:
 
 # This is an appalling mess, but it works.
 def predefined_meals():
+    """Access point for predefined meal files in "macro_counter/macro_counter/predefined_meals/", \
+        e.g. creating new, modifying, and/or displaying `predefined_meal` files.
+
+    Returns:
+        `main()`.
+    """
     target_directory = (
         "/home/vallen/Workspace/macro_counter/macro_counter/predefined_meals"
     )
@@ -161,7 +221,7 @@ def predefined_meals():
                 print(file)
 
             try:
-                file_name = str(input())
+                file_name = str(input("-"))
                 if ".txt" not in file_name:
                     file_name = f"{file_name}.txt"
 
@@ -175,13 +235,18 @@ def predefined_meals():
             target_file = os.path.join(target_directory, file_name)
             counter = MacroCounter(target_directory, target_file)
             counter.compile_data(target_file, clean_data=True)
-            counter.modify_file()
+            counter.collect_data()
 
         if operation == "df":
             view_previous_data(target_directory, operation, predefined=True)
 
 
 def display_data(file):
+    """Print file contents to the terminal.
+
+    Args:
+        file (string: absolute file path): Prints the content of the given file.
+    """
     print()
     with open(file, "r", encoding="utf-8") as read_file:
         for data in read_file:
@@ -190,6 +255,12 @@ def display_data(file):
 
 
 def display_monthly_data(directory):
+    """Compile and print data about the sum, mean, and relative percentages \
+                of all files within `directory` to the terminal.
+
+    Args:
+        directory (string: absolute directory path): targeted directory.
+    """
     totals = [0, 0, 0, 0]
     os.chdir(directory)
     file_list = os.listdir(directory)
@@ -231,13 +302,26 @@ def display_monthly_data(directory):
 
 
 def view_previous_data(parent_directory, operation, predefined=False):
+    """Print information of antique files and/or directories to the terminal.
+
+    Args:
+        parent_directory (string: absolute directory path): \
+                The parent directory of the targeted directory.
+        operation (string): A string input passed from the calling code \
+                to determine what information to display
+        predefined (boolean): Predifined files have largely divergant pathing.
+
+    Returns:
+        `display_monthly_data(target_directory)` or `display_data(target_file)`
+        depending on what `operation` was passed from the calling code.
+    """
     if not predefined:
         print("\nEnter a relative directory from:")
         for directory in os.listdir(parent_directory):
             print(directory)
 
         try:
-            directory_name = str(input("\n"))
+            directory_name = str(input("\n-"))
             if directory_name not in os.listdir(parent_directory):
                 raise FileNotFoundError
 
@@ -258,7 +342,7 @@ def view_previous_data(parent_directory, operation, predefined=False):
         print(file)
 
     try:
-        file_name = str(input("\n"))
+        file_name = str(input("\n-"))
         if ".txt" not in file_name:
             file_name = f"{file_name}.txt"
 
@@ -274,6 +358,11 @@ def view_previous_data(parent_directory, operation, predefined=False):
 
 
 def main():
+    """Entry point for program execution.
+
+    Returns:
+        Everything else.
+    """
     print(
         "\n(mf)  - Modify file"
         "\n(dpf) - Display previous files"
@@ -318,7 +407,7 @@ def main():
 
         if operation == "mf":
             counter.compile_data(target_file, clean_data=True)
-            counter.modify_file()
+            counter.collect_data()
         if operation == "df":
             display_data(target_file)
         if operation == "dm":
@@ -328,6 +417,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# TODO: create docstrings
-# TODO: your mother
